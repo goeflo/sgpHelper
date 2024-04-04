@@ -19,3 +19,9 @@
 
 # Go workspace file
 go.work
+
+# default race data json file
+race_data.json
+
+# default data directory
+data/
