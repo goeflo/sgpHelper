@@ -2,6 +2,7 @@
 
 Anaylze your simracing.gp racing season.
 
+![Screenshot of the sgp helper start page.](images/start-page.png)
 
 ## todo
 
