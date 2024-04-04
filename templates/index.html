@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="/public/favicon.ico">
+    <link href="/public/style.css" rel="stylesheet" />
+    <!--<script src="/public/htmx.min.js"></script>-->
+    <title>sgp helper</title>
+  </head>
+  <body class="">
+
+    <div>
+      <form action="/newSeason" method="post" enctype="multipart/form-data">
+        <label for="new_season_name">season name</label>
+        <input type="text" id="new_season_name" name="new_season_name" required minlength="4" maxlength="50" size="25" />
+        <input type="submit" value="create">
+      </form>
+    </div>
+
+    <div>
+      <ul>
+        {{ range $key, $value := . }}
+          <li>{{ $key }} 
+            {{ if eq $value.EntyListFile ""}}
+            <form action="/uploadEntryList/{{ $key }}" method="post" enctype="multipart/form-data">
+              <label for="entry_list">add season entry list</label>
+              <input type="file" id="entry_list" required name="entry_list" accept=".csv"/>
+              <input type="submit" value="upload">
+            </form>
+            {{ else }}
+            season entry list ok
+            {{ end }}
+            <ul>
+              {{ range $value.Races }}
+              <li><a href="/delete/{{ $key }}/{{ .Name }}">[x]</a> &gt; {{ .Name }} &gt; <a href="/show/{{ $key }}/{{ .Name }}">[results]</a></li>
+              {{ end }}
+              {{ if ne $value.EntyListFile ""}}
+              <li>
+                <form action="/upload/{{ $key }}" method="post" enctype="multipart/form-data">
+                  <label for="new_race_name">add race</label>
+                  <input type="text" id="new_race_name" name="new_race_name" required minlength="4" maxlength="50" size="25" />
+                  <label for="qualy_result">qualification result</label>
+                  <input type="file" id="qualy_result" required name="qualy_result" accept=".csv"/>
+                  <label for="race_result">race result</label>
+                  <input type="file" id="race_result" required name="race_result" accept=".csv"/>
+                  <input type="submit" value="upload">
+                </form>
+              </li>
+              {{ end }}
+            </ul>
+          </li>    
+        {{ end }}  
+      </ul>
+    </div>
+
+  </body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="/public/favicon.ico">
+    <link href="/public/style.css" rel="stylesheet" />
+    <!--<script src="/public/htmx.min.js"></script>-->
+    <title>sgp helper</title>
+  </head>
+  <body class="">
+
+    <div><a href="/">[&lt;-]</a></div>
+
+    {{ $season_name := .SeasonName }}
+    {{ $race_name := .RaceName }}
+    {{ $race_result := .RaceResult }}
+    {{ $race_result_with_penalty := .RaceResultWithPenalty }}
+
+    <p><b>Season: {{ .SeasonName }} / Race: {{ .RaceName }}</b></p>
+
+    
+    <div>
+      
+      {{ range $key, $value := $race_result }}
+      {{ $split_name := $key }}
+      <p><b>{{ $split_name }}</b> <a target="_blank" href="/export/csv/{{ $season_name }}/{{ $race_name }}/{{ $split_name }}">[csv]</a></p>
+
+        <div class="row">
+          <div class="column">
+            <table>
+              <tr>
+                <td>pos</td>
+                <td>start pos</td>
+                <td>race number</td>
+                <td>team</td>
+                <td>driver</td>
+                <td>best lap time</td>
+                <td>laps</td>
+                <td>total time</td>
+                <td>penalty</td>
+                <td>change penalty</td>
+              </tr>
+              {{ range $i, $line := $value }}
+              <tr>
+                <td>{{ add $i 1 }}</td>
+                <td>{{ $line.Pos }}</td>
+                <td>#{{ $line.Startnumber }}</td>
+                <td>{{ $line.Team }}</td>
+                <td>{{ $line.Driver }}</td>
+                <td>{{ $line.BestLapTime }}</td>
+                <td>{{ $line.Laps }}</td>
+                <td>{{ $line.TotalTime }}</td>
+                <td>{{ $line.Penalty }}</td>
+                <td>
+                  <form action="/addPenalty/{{ $season_name }}/{{ $race_name }}" method="post">
+                    <input type="text" id="penalty_add" name="penalty" maxlength="3" size="3" value="0"/>
+                    <input type="hidden" id="pos" name="pos" value="{{ .Pos }}">
+                    {{ if ne $line.Laps "0" }}<input class="btn" type="submit" value="+">{{ end }}
+                  </form>
+                </td>
+              </tr>
+              {{ end }}
+            </table>
+          </div>
+          <div class="column">
+            <table>
+              <tr>
+                <td>pos</td>
+                <td>start pos</td>
+                <td>race number</td>
+                <td>team</td>
+                <td>driver</td>
+                <td>best lap time</td>
+                <td>laps</td>
+                <td>total time</td>
+                <td>penalty</td>
+              </tr>
+              {{ range $i, $line := (index $race_result_with_penalty $split_name)  }}
+              <tr>
+                <td>{{ add $i 1 }}</td>
+                <td>{{ $line.Pos }}</td>
+                <td>#{{ $line.Startnumber }}</td>
+                <td>{{ $line.Team }}</td>
+                <td>{{ $line.Driver }}</td>
+                <td>{{ $line.BestLapTime }}</td>
+                <td>{{ $line.Laps }}</td>
+                <td>{{ $line.TotalTime }}</td>
+                <td><input type="text" id="penalty_show" name="penalty" maxlength="3" size="3" value="{{ .Penalty }}"/></td>
+              </tr>
+              {{ end }}
+            </table>
+          </div>
+        </div>
+      {{ end }}
+    </div>
+  </body>
+</html>
