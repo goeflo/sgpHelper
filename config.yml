@@ -1,0 +1,5 @@
+# example default configuration
+server:
+  port: 8080
+  dataDir: data
+  raceData: race_data.json

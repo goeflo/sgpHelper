@@ -10,9 +10,8 @@ import (
 	"strings"
 )
 
-const UPLOAD_DIR = "data"
-
 type RaceData struct {
+	DataDir      string    `json:"data_dir"`
 	Seasons      SeasonMap `json:"season"`
 	RaceDataFile string    `json:"racedata_filename"`
 }
@@ -30,20 +29,26 @@ type Race struct {
 	RaceResultFile  string `json:"race_result_file"`
 }
 
-func NewRaceData(filename string) *RaceData {
+// NewRaceData new race data with data in dataDir
+// and race data configuration in raceDataFile
+func NewRaceData(dataDir string, raceDataFile string) *RaceData {
 
-	newSeason := RaceData{
-		RaceDataFile: filename,
+	newRaceData := RaceData{
+		RaceDataFile: raceDataFile,
+		DataDir:      dataDir,
 		Seasons:      SeasonMap{},
 	}
 
-	if _, err := os.Stat(filename); err == nil {
-		newSeason.readSeasonsFile()
+	if _, err := os.Stat(raceDataFile); err == nil {
+		newRaceData.readSeasonsFile()
 	} else {
-		newSeason.createSeasonsFile()
+		newRaceData.createSeasonsFile()
 	}
 
-	return &newSeason
+	log.Printf("new race data with data dir: %v, data file: %v\n",
+		newRaceData.DataDir, newRaceData.RaceDataFile)
+
+	return &newRaceData
 }
 
 func (s *RaceData) AddEntryList(seasonName string, entryList []byte) error {
@@ -52,7 +57,7 @@ func (s *RaceData) AddEntryList(seasonName string, entryList []byte) error {
 		return fmt.Errorf("season %v not found", seasonName)
 	}
 
-	entyListFilename := path.Join(UPLOAD_DIR, nameToDir(seasonName), "enty_list.csv")
+	entyListFilename := path.Join(s.DataDir, nameToDir(seasonName), "enty_list.csv")
 	log.Printf("add entry list %v to season %v\n", entyListFilename, season)
 
 	if err := os.WriteFile(entyListFilename, entryList, 0644); err != nil {
@@ -132,7 +137,7 @@ func (s *RaceData) AddResults(seasonName string, raceName string, qualyResult []
 
 	for i, race := range season.Races {
 		if race.Name == raceName {
-			qualyCsvFilename := path.Join(dataDir(seasonName, raceName), "qualy_result.csv")
+			qualyCsvFilename := path.Join(s.dataDir(seasonName, raceName), "qualy_result.csv")
 			season.Races[i].QualyResultFile = qualyCsvFilename
 			if err := os.WriteFile(qualyCsvFilename, qualyResult, 0644); err != nil {
 				log.Fatal(err)
@@ -141,7 +146,7 @@ func (s *RaceData) AddResults(seasonName string, raceName string, qualyResult []
 				log.Fatal(err)
 			}
 
-			raceCsvFilename := path.Join(dataDir(seasonName, raceName), "race_result.csv")
+			raceCsvFilename := path.Join(s.dataDir(seasonName, raceName), "race_result.csv")
 			season.Races[i].RaceResultFile = raceCsvFilename
 			if err := os.WriteFile(raceCsvFilename, raceResult, 0644); err != nil {
 				log.Fatal(err)
@@ -205,7 +210,7 @@ func (s *RaceData) AddRace(seasonName string, raceName string) error {
 	s.Seasons[seasonName] = season
 	s.writeSeasonsFile()
 
-	if err := os.MkdirAll(path.Join(UPLOAD_DIR, nameToDir(seasonName), nameToDir(raceName)), 0770); err != nil {
+	if err := os.MkdirAll(path.Join(s.DataDir, nameToDir(seasonName), nameToDir(raceName)), 0770); err != nil {
 		log.Fatal(err)
 	}
 
@@ -221,7 +226,7 @@ func (s *RaceData) AddSeason(name string) error {
 	s.Seasons[name] = Season{Races: []Race{}}
 	s.writeSeasonsFile()
 
-	if err := os.MkdirAll(path.Join(UPLOAD_DIR, nameToDir(name)), 0770); err != nil {
+	if err := os.MkdirAll(path.Join(s.DataDir, nameToDir(name)), 0770); err != nil {
 		log.Fatal(err)
 	}
 
@@ -250,8 +255,8 @@ func (s *RaceData) createSeasonsFile() {
 	defer f.Close()
 }
 
-func dataDir(seaon string, race string) string {
-	return path.Join(UPLOAD_DIR,
+func (s *RaceData) dataDir(seaon string, race string) string {
+	return path.Join(s.DataDir,
 		strings.ToLower(strings.ReplaceAll(seaon, " ", "_")),
 		strings.ToLower(strings.ReplaceAll(race, " ", "_")))
 }
