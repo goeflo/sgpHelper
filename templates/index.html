@@ -29,7 +29,7 @@
               <input type="submit" value="upload">
             </form>
             {{ else }}
-            season entry list ok
+            season <a href="/showEntryList/{{ $value.EntyListFile }}">[entry list]</a> ok
             {{ end }}
             <ul>
               {{ range $value.Races }}

@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"sgpHelper/racedata"
+	"strings"
 	"time"
 )
 
@@ -25,6 +26,7 @@ var funcMap = map[string]interface{}{
 
 var indexTmpl = template.Must(template.New("funcMap").Funcs(funcMap).ParseFiles("templates/index.html"))
 var raceTmpl = template.Must(template.New("funcMap").Funcs(funcMap).ParseFiles("templates/race.html"))
+var entrylistTmpl = template.Must(template.New("funcMap").Funcs(funcMap).ParseFiles("templates/entrylist.html"))
 
 //go:embed public/*
 var publicFS embed.FS
@@ -47,6 +49,7 @@ func (s *Server) Start() error {
 	mux.HandleFunc("/upload/{season}", s.handleUpload)
 	mux.HandleFunc("/export/csv/{season}/{race}/{split}", s.handleExportRace)
 	mux.HandleFunc("/uploadEntryList/{season}", s.handleUploadEntyList)
+	mux.HandleFunc("/showEntryList/*", s.handleShowEntyList)
 	mux.Handle("/public/", http.FileServer(http.FS(publicFS)))
 	s.server.Handler = mux
 
@@ -56,13 +59,30 @@ func (s *Server) Start() error {
 
 }
 
+func (s *Server) handleShowEntyList(w http.ResponseWriter, r *http.Request) {
+	log.Printf("-> handleShowEntyList entylist %v\n", strings.ReplaceAll(r.RequestURI, "/showEntryList/", ""))
+	defer logDuration(r.RequestURI, time.Now())
+
+	entryList, err := s.season.GetEntryList(strings.ReplaceAll(r.RequestURI, "/showEntryList/", ""))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := entrylistTmpl.ExecuteTemplate(w, "entrylist.html", entryList); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 func (s *Server) handleExportRace(w http.ResponseWriter, r *http.Request) {
-	startTime := time.Now()
-	defer logDuration(startTime)
+	log.Printf("-> handleExportRace season %v, race %v, split %v\n", r.PathValue("season"), r.PathValue("race"), r.PathValue("split"))
+	defer logDuration(r.RequestURI, time.Now())
+
 	seasonName := r.PathValue("season")
 	raceName := r.PathValue("race")
 	splitName := r.PathValue("split")
-	log.Printf("handleExportRace season: %v race: %v split: %v\n", seasonName, raceName, splitName)
+
 	raceResult, err := s.season.GetRaceResult(seasonName, raceName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -90,10 +110,9 @@ func (s *Server) handleDeleteRace(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleShowRace(w http.ResponseWriter, r *http.Request) {
-	startTime := time.Now()
-	defer logDuration(startTime)
+	log.Printf("-> handleShowRace race %v, season %v\n", r.PathValue("season"), r.PathValue("name"))
+	defer logDuration(r.RequestURI, time.Now())
 
-	log.Printf("handleShowRace race %v season %v\n", r.PathValue("season"), r.PathValue("name"))
 	seasonName := r.PathValue("season")
 	raceName := r.PathValue("race")
 
@@ -126,15 +145,11 @@ func (s *Server) handleNewSeason(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
-	startTime := time.Now()
-	defer logDuration(startTime)
-
-	log.Printf("handleIndex\n")
-
+	log.Printf("-> handleIndex\n")
+	defer logDuration(r.RequestURI, time.Now())
 	if err := indexTmpl.ExecuteTemplate(w, "index.html", s.season.Seasons); err != nil {
 		log.Fatal(err)
 	}
-
 }
 
 func (s *Server) handleUploadEntyList(w http.ResponseWriter, r *http.Request) {
@@ -239,7 +254,7 @@ func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func logDuration(t time.Time) {
+func logDuration(s string, t time.Time) {
 	d := time.Now().Sub(t)
-	log.Printf("-> time: %v\n", d)
+	log.Printf("<- %v time: %v\n", s, d)
 }

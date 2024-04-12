@@ -17,6 +17,16 @@ type RaceResult struct {
 	RaceResultWithPenalty map[string]ResultLines
 }
 
+type Driver struct {
+	Driver     string
+	Team       string
+	Car        string
+	RaceNumber string
+	Class      string
+}
+
+type EntryList []Driver
+
 type ResultLine struct {
 	Pos              uint
 	StartPos         string
@@ -57,6 +67,27 @@ func (r ResultLines) Less(i, j int) bool {
 
 func (r ResultLines) Swap(i, j int) {
 	r[i], r[j] = r[j], r[i]
+}
+
+func (s *RaceData) GetEntryList(filename string) (*EntryList, error) {
+	csvEntryList, err := readEntryList(filename)
+	if err != nil {
+		return nil, fmt.Errorf(err.Error())
+	}
+
+	entryList := EntryList{}
+
+	for _, line := range *csvEntryList {
+		entryList = append(entryList, Driver{
+			Driver:     line.Driver,
+			Team:       line.Team,
+			Car:        line.Car,
+			RaceNumber: line.RaceNumber,
+			Class:      line.Class,
+		})
+	}
+
+	return &entryList, nil
 }
 
 func (s *RaceData) GetRaceResult(seasonName string, raceName string) (*RaceResult, error) {

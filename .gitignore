@@ -25,3 +25,6 @@ race_data.json
 
 # default data directory
 data/
+
+# air compile dir
+tmp/

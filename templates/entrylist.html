@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="/public/favicon.ico">
+    <link href="/public/style.css" rel="stylesheet" />
+    <!--<script src="/public/htmx.min.js"></script>-->
+    <title>sgp helper</title>
+  </head>
+  <body class="">
+
+    <div><a href="/">[&lt;-]</a></div>
+    <p>entry list</p>
+
+        <table>
+          <tr>
+            <td>Driver</td>
+            <td>Team</td>
+            <td>Car</td>
+            <td>Race Number</td>
+            <td>Class</td>
+          </tr>
+
+          {{ range $key, $value := . }}
+          <tr>
+            <td>{{ $value.Driver }}</td>
+            <td>{{ $value.Team }}</td>
+            <td>{{ $value.Car }}</td>
+            <td>{{ $value.RaceNumber }}</td>
+            <td>{{ $value.Class }}</td>
+          </tr>
+          {{ end }}
+
+        </table>
+
+  </body>
+</html>
